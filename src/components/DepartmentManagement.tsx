@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,35 +8,110 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { FolderPlus, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { mockDepartments } from '@/data/mockData';
+import { api } from '@/lib/api';
+import { Department } from '@/types';
+
+const emptyForm: Partial<Department> = {
+  id: undefined,
+  name: '',
+  path: '',
+  defaultAccess: false,
+  active: true,
+};
 
 const DepartmentManagement = () => {
   const { toast } = useToast();
-  const [departments, setDepartments] = useState(mockDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<Partial<Department>>(emptyForm);
 
-  const handleToggleActive = (deptId: string) => {
-    setDepartments(departments.map((d) => (d.id === deptId ? { ...d, active: !d.active } : d)));
-    toast({
-      title: 'Status atualizado',
-      description: 'O status do departamento foi alterado',
-    });
+  const loadDepartments = () => {
+    api
+      .listDepartments()
+      .then(setDepartments)
+      .catch(() =>
+        toast({
+          title: 'Erro ao carregar departamentos',
+          description: 'Confirme se o compartilhamento esta disponivel',
+          variant: 'destructive',
+        }),
+      );
   };
 
-  const handleToggleDefault = (deptId: string) => {
-    setDepartments(departments.map((d) => (d.id === deptId ? { ...d, defaultAccess: !d.defaultAccess } : d)));
-    toast({
-      title: 'Acesso padrão atualizado',
-      description: 'A configuração de acesso padrão foi alterada',
-    });
+  useEffect(() => {
+    loadDepartments();
+  }, []);
+
+  const handleToggleActive = async (dept: Department) => {
+    try {
+      const updated = await api.toggleDepartmentStatus({ id: dept.id, active: !dept.active });
+      setDepartments((current) => current.map((d) => (d.id === updated.id ? updated : d)));
+      toast({
+        title: 'Status atualizado',
+        description: `Departamento ${updated.active ? 'ativo' : 'inativo'}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao atualizar status',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleSave = () => {
-    toast({
-      title: 'Departamento salvo',
-      description: 'As alterações foram salvas com sucesso',
-    });
-    setDialogOpen(false);
+  const handleToggleDefault = async (dept: Department) => {
+    try {
+      const updated = await api.saveDepartment({ ...dept, defaultAccess: !dept.defaultAccess });
+      setDepartments((current) => current.map((d) => (d.id === updated.id ? updated : d)));
+      toast({
+        title: 'Acesso padrao atualizado',
+        description: `${updated.name} ${updated.defaultAccess ? 'liberado' : 'removido'} para todos`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao atualizar acesso padrao',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.path) {
+      toast({
+        title: 'Campos obrigatorios',
+        description: 'Informe nome e caminho da pasta',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      const saved = await api.saveDepartment(form);
+      setDepartments((current) => {
+        const exists = current.some((d) => d.id === saved.id);
+        if (exists) {
+          return current.map((d) => (d.id === saved.id ? saved : d));
+        }
+        return [...current, saved];
+      });
+      setDialogOpen(false);
+      setForm(emptyForm);
+      toast({
+        title: 'Departamento salvo',
+        description: 'Configuracao registrada com sucesso',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar departamento',
+        description: 'Tente novamente',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const startEdit = (dept: Department) => {
+    setForm(dept);
+    setDialogOpen(true);
   };
 
   return (
@@ -45,35 +120,55 @@ const DepartmentManagement = () => {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Gerenciamento de Departamentos</CardTitle>
-            <CardDescription>Configure os departamentos e pastas do sistema</CardDescription>
+            <CardDescription>Configure os setores mapeados para a pasta de rede</CardDescription>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => setForm(emptyForm)}>
                 <FolderPlus className="mr-2 h-4 w-4" />
                 Novo Departamento
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Novo Departamento</DialogTitle>
-                <DialogDescription>Configure um novo departamento</DialogDescription>
+                <DialogTitle>{form.id ? 'Editar departamento' : 'Novo departamento'}</DialogTitle>
+                <DialogDescription>Nome publico e caminho fisico na rede</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Nome do Departamento</Label>
-                  <Input placeholder="Ex: ADMINISTRATIVO" />
+                  <Label>Nome do departamento</Label>
+                  <Input
+                    placeholder="Ex: ADMINISTRATIVO"
+                    value={form.name ?? ''}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Caminho da Pasta</Label>
-                  <Input placeholder="\\serv-arquivos\ARQUIVOS\MEIO AMBIENTE\..." />
+                  <Label>Caminho da pasta</Label>
+                  <Input
+                    placeholder="\\\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE\\"
+                    value={form.path ?? ''}
+                    onChange={(e) => setForm({ ...form, path: e.target.value })}
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Switch id="default-access" />
-                  <Label htmlFor="default-access">Acesso padrão para todos</Label>
+                  <Switch
+                    id="default-access"
+                    checked={form.defaultAccess}
+                    onCheckedChange={(checked) => setForm({ ...form, defaultAccess: checked })}
+                  />
+                  <Label htmlFor="default-access">Liberar por padrao para todos</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="active"
+                    checked={form.active}
+                    onCheckedChange={(checked) => setForm({ ...form, active: checked })}
+                  />
+                  <Label htmlFor="active">Departamento ativo</Label>
                 </div>
                 <Button onClick={handleSave} className="w-full">
-                  Salvar Departamento
+                  Salvar departamento
                 </Button>
               </div>
             </DialogContent>
@@ -86,9 +181,9 @@ const DepartmentManagement = () => {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Caminho</TableHead>
-              <TableHead>Acesso Padrão</TableHead>
+              <TableHead>Acesso padrao</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right">Acoes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,19 +194,13 @@ const DepartmentManagement = () => {
                   {dept.path}
                 </TableCell>
                 <TableCell>
-                  <Switch
-                    checked={dept.defaultAccess}
-                    onCheckedChange={() => handleToggleDefault(dept.id)}
-                  />
+                  <Switch checked={dept.defaultAccess} onCheckedChange={() => handleToggleDefault(dept)} />
                 </TableCell>
                 <TableCell>
-                  <Switch
-                    checked={dept.active}
-                    onCheckedChange={() => handleToggleActive(dept.id)}
-                  />
+                  <Switch checked={dept.active} onCheckedChange={() => handleToggleActive(dept)} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => startEdit(dept)}>
                     <Edit className="h-4 w-4" />
                   </Button>
                 </TableCell>

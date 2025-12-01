@@ -21,21 +21,21 @@ const Login = () => {
     setLoading(true);
 
     const success = await login(cpf, password);
-    
+
     if (success) {
       toast({
         title: 'Login realizado',
-        description: 'Bem-vindo ao sistema Pastas SEDEMAT',
+        description: 'Bem-vindo ao Pastas SEDEMAT',
       });
       navigate('/');
     } else {
       toast({
         title: 'Erro no login',
-        description: 'CPF ou senha inválidos',
+        description: 'CPF ou senha invalidos',
         variant: 'destructive',
       });
     }
-    
+
     setLoading(false);
   };
 
@@ -54,7 +54,7 @@ const Login = () => {
             </div>
           </div>
           <CardTitle className="text-3xl font-bold text-primary">Pastas SEDEMAT</CardTitle>
-          <CardDescription>Sistema de Gestão de Arquivos</CardDescription>
+          <CardDescription>Sistema de gestao de arquivos por setor</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,7 +63,7 @@ const Login = () => {
               <Input
                 id="cpf"
                 type="text"
-                placeholder="Digite apenas os números"
+                placeholder="Digite apenas os numeros"
                 value={cpf}
                 onChange={(e) => setCpf(formatCPF(e.target.value))}
                 required
@@ -75,24 +75,20 @@ const Login = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Digite sua senha"
+                placeholder="Primeira letra do nome + 6 primeiros digitos do CPF"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="border-primary/30 focus:border-primary"
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
           <div className="mt-6 text-sm text-muted-foreground text-center">
-            <p>Usuário teste: <strong>12345678901</strong></p>
-            <p>Senha: <strong>admin</strong></p>
+            <p>Gestor padrao: <strong>12345678901</strong> / <strong>g123456</strong></p>
+            <p>Servidor exemplo: <strong>98765432100</strong> / <strong>j987654</strong></p>
           </div>
         </CardContent>
       </Card>

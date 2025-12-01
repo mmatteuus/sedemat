@@ -1,6 +1,6 @@
 import { Folder } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Department } from '@/data/mockData';
+import { Department } from '@/types';
 
 interface DepartmentCardProps {
   department: Department;

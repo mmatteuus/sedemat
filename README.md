@@ -1,73 +1,51 @@
-# Welcome to your Lovable project
+# Pastas SEDEMAT
 
-## Project info
+Aplicacao desktop (Electron + React + Vite) para acesso organizado aos arquivos da pasta de rede `\\serv-arquivos\ARQUIVOS\MEIO AMBIENTE`, com controle de permissoes por usuario e departamento.
 
-**URL**: https://lovable.dev/projects/c82947b8-6826-47c7-a504-b58ed30984ba
+## Funcionalidades
+- Login por CPF e senha (regra inicial: primeira letra do nome + 6 primeiros digitos do CPF).
+- Perfis: `GESTOR_TI` (administra tudo) e `SERVIDOR` (ve apenas os departamentos liberados).
+- Departamentos configuraveis com caminho real, ativo/inativo e flag de acesso padrao (ex.: GERAL SEDEMAT e SCAN).
+- Gerenciamento de usuarios (criar, editar, ativar/inativar, redefinir senha).
+- Matriz de acessos por usuario x departamento.
+- Exploracao de arquivos por departamento com breadcrumb, busca, filtros e preview basico (imagem e PDF).
+- Abrir arquivo no aplicativo padrao do Windows ou salvar copia local.
 
-## How can I edit this code?
+## Como rodar em desenvolvimento (desktop)
+1. Instale as dependencias:
+   ```bash
+   npm install
+   ```
+2. Inicie o front + Electron (necessario Windows com acesso ao compartilhamento ou use os mocks):
+   ```bash
+   npm run desktop:dev
+   ```
+   - O Vite sobe em `http://localhost:5173` e o Electron abre a janela desktop apontando para o mesmo host.
 
-There are several ways of editing your application.
+## Como gerar instalador para Windows
+1. Gere o build web:
+   ```bash
+   npm run build
+   ```
+2. Empacote o app desktop:
+   ```bash
+   npm run desktop:build
+   ```
+   - O instalador `.exe` e gerado em `release/`.
 
-**Use Lovable**
+## Script de instalacao (Windows)
+- Para instalar o app e registrar o caminho da pasta de rede nesta maquina:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts/install.ps1 -BasePath "\\serv-arquivos\ARQUIVOS\MEIO AMBIENTE"
+  ```
+  - Ajuste `-BasePath` se o compartilhamento for diferente. O script seta a variavel `SEDEMAT_BASE_PATH` (nivel maquina), gera o instalador e executa em modo silencioso.
+  - Depois basta abrir “Pastas SEDEMAT” pelo menu iniciar.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c82947b8-6826-47c7-a504-b58ed30984ba) and start prompting.
+## Credenciais iniciais
+- Gestor TI: CPF `12345678901` / senha `g123456`
+- Servidor exemplo: CPF `98765432100` / senha `j987654`
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c82947b8-6826-47c7-a504-b58ed30984ba) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Observacoes
+- O app armazena configuracoes e usuarios em `AppData/Roaming/<Pastas SEDEMAT>/sedemat-data.json`.
+- Departamentos com `defaultAccess` (GERAL SEDEMAT e SCAN) sao liberados automaticamente para todos.
+- Caso o compartilhamento de rede nao esteja acessivel, o modo de desenvolvimento usa dados mockados.
