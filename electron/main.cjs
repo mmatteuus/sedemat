@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { app, BrowserWindow, ipcMain, shell, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const {
   getBasePath,
   ensureDataFile,
@@ -20,13 +20,12 @@ const {
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL;
 const iconPath = path.join(__dirname, 'icon.ico');
-const treeIcon = nativeImage.createFromPath(iconPath);
 
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 1300,
     height: 900,
-    icon: treeIcon,
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
