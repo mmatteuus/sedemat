@@ -6,6 +6,9 @@ const DEFAULT_BASE_PATH = '\\\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE';
 
 const resolveBasePath = () => process.env.SEDEMAT_BASE_PATH || DEFAULT_BASE_PATH;
 
+const buildInitialPassword = (name, cpf) => `${name.trim().charAt(0).toLowerCase()}${cpf.substring(0, 6)}`;
+const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex');
+
 const buildDefaultDepartments = (basePath) => [
   { id: 'administrativo', name: 'ADMINISTRATIVO', path: `${basePath}\\ADMINISTRATIVO`, defaultAccess: false, active: true },
   { id: 'desenvolvimento', name: 'DESENVOLVIMENTO ECONOMICO', path: `${basePath}\\DESENVOLVIMENTO ECONOMICO`, defaultAccess: false, active: true },
@@ -22,11 +25,12 @@ const buildDefaultUsers = (defaultDepartments) => [
   {
     id: '1',
     name: 'Gestor TI',
-    cpf: '12345678901',
-    login: '12345678901',
+    cpf: '05956815140',
+    login: 'pma\\05956815140',
     role: 'GESTOR_TI',
     active: true,
     departments: defaultDepartments.map((d) => d.id),
+    passwordHash: hashPassword('m059568'),
   },
   {
     id: '2',
@@ -39,9 +43,6 @@ const buildDefaultUsers = (defaultDepartments) => [
   },
 ];
 
-const buildInitialPassword = (name, cpf) => `${name.trim().charAt(0).toLowerCase()}${cpf.substring(0, 6)}`;
-const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex');
-
 const ensureDataFile = (app) => {
   const filePath = path.join(app.getPath('userData'), 'sedemat-data.json');
   if (!fs.existsSync(filePath)) {
@@ -50,7 +51,7 @@ const ensureDataFile = (app) => {
     const defaultUsers = buildDefaultUsers(defaultDepartments);
     const usersWithPasswords = defaultUsers.map((u) => ({
       ...u,
-      passwordHash: hashPassword(buildInitialPassword(u.name, u.cpf)),
+      passwordHash: u.passwordHash || hashPassword(buildInitialPassword(u.name, u.cpf)),
     }));
     fs.writeFileSync(
       filePath,
