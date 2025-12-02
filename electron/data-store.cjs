@@ -2,24 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DEFAULT_BASE_PATH = '';
+const DEFAULT_BASE_PATH = '\\\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE';
 
 const resolveBasePath = () => process.env.SEDEMAT_BASE_PATH || DEFAULT_BASE_PATH;
 
-const buildDefaultDepartments = (basePath) => {
-  if (!basePath) return [];
-  return [
-    { id: 'administrativo', name: 'ADMINISTRATIVO', path: `${basePath}\\ADMINISTRATIVO`, defaultAccess: false, active: true },
-    { id: 'desenvolvimento', name: 'DESENVOLVIMENTO ECONOMICO', path: `${basePath}\\DESENVOLVIMENTO ECONOMICO`, defaultAccess: false, active: true },
-    { id: 'fiscalizacao', name: 'FISCALIZACAO', path: `${basePath}\\FISCALIZACAO`, defaultAccess: false, active: true },
-    { id: 'geral-meio-ambiente', name: 'GERAL MEIO AMBIENTE', path: `${basePath}\\GERAL MEIO AMBIENTE`, defaultAccess: false, active: true },
-    { id: 'juridico', name: 'JURIDICO', path: `${basePath}\\JURIDICO`, defaultAccess: false, active: true },
-    { id: 'licenciamento', name: 'LICENCIAMENTO', path: `${basePath}\\LICENCIAMENTO`, defaultAccess: false, active: true },
-    { id: 'turismo', name: 'TURISMO', path: `${basePath}\\TURISMO`, defaultAccess: false, active: true },
-    { id: 'geral-sedemat', name: 'GERAL SEDEMAT', path: `${basePath}\\GERAL SEDEMAT`, defaultAccess: true, active: true },
-    { id: 'scan', name: 'SCAN', path: `${basePath}\\SCAN`, defaultAccess: true, active: true },
-  ];
-};
+const buildDefaultDepartments = (basePath) => [
+  { id: 'administrativo', name: 'ADMINISTRATIVO', path: `${basePath}\\ADMINISTRATIVO`, defaultAccess: false, active: true },
+  { id: 'desenvolvimento', name: 'DESENVOLVIMENTO ECONOMICO', path: `${basePath}\\DESENVOLVIMENTO ECONOMICO`, defaultAccess: false, active: true },
+  { id: 'fiscalizacao', name: 'FISCALIZACAO', path: `${basePath}\\FISCALIZACAO`, defaultAccess: false, active: true },
+  { id: 'geral-meio-ambiente', name: 'GERAL MEIO AMBIENTE', path: `${basePath}\\GERAL MEIO AMBIENTE`, defaultAccess: false, active: true },
+  { id: 'juridico', name: 'JURIDICO', path: `${basePath}\\JURIDICO`, defaultAccess: false, active: true },
+  { id: 'licenciamento', name: 'LICENCIAMENTO', path: `${basePath}\\LICENCIAMENTO`, defaultAccess: false, active: true },
+  { id: 'turismo', name: 'TURISMO', path: `${basePath}\\TURISMO`, defaultAccess: false, active: true },
+  { id: 'geral-sedemat', name: 'GERAL SEDEMAT', path: `${basePath}\\GERAL SEDEMAT`, defaultAccess: true, active: true },
+  { id: 'scan', name: 'SCAN', path: `${basePath}\\SCAN`, defaultAccess: true, active: true },
+];
 
 const buildDefaultUsers = (defaultDepartments) => [
   {
