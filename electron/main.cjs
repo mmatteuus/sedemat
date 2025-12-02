@@ -15,6 +15,7 @@ const {
   saveUserPermissions,
   listFiles,
   buildPreview,
+  updateBasePath,
 } = require('./data-store.cjs');
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL;
@@ -56,6 +57,7 @@ app.on('window-all-closed', () => {
 });
 
 ipcMain.handle('bootstrap', async () => ({ basePath: getBasePath(app) }));
+ipcMain.handle('basePath:update', async (_, payload) => updateBasePath(app, payload.basePath));
 
 ipcMain.handle('auth:login', async (_, payload) => login(app, payload.cpf, payload.password));
 

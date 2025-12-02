@@ -1,8 +1,9 @@
-import { mockDepartments, mockFiles, mockUsers } from '@/data/mockData';
+import { BASE_SHARE_PATH, mockDepartments, mockFiles, mockUsers } from '@/data/mockData';
 import { Department, FileItem, FilePreviewData, User } from '@/types';
 
 type DesktopAPI = {
   bootstrap: () => Promise<{ basePath: string }>;
+  updateBasePath: (payload: { basePath: string }) => Promise<{ basePath: string }>;
   login: (payload: { cpf: string; password: string }) => Promise<User>;
   listDepartments: () => Promise<Department[]>;
   saveDepartment: (payload: Partial<Department>) => Promise<Department>;
@@ -23,18 +24,39 @@ const desktopApi: DesktopAPI | undefined = (globalThis as any).desktopAPI;
 let fallbackUsers = [...mockUsers];
 let fallbackDepartments = [...mockDepartments];
 let fallbackFiles = [...mockFiles];
+let fallbackBasePath = BASE_SHARE_PATH;
 
 const buildInitialPassword = (name: string, cpf: string) =>
   `${name.trim().charAt(0).toLowerCase()}${cpf.substring(0, 6)}`;
 
 const ensureDesktop = () => !!desktopApi;
 
+const remapDepartmentsBase = (departments: Department[], previousBase: string, nextBase: string) =>
+  departments.map((dept) => {
+    if (dept.path.startsWith(previousBase)) {
+      const relative = dept.path.slice(previousBase.length);
+      return { ...dept, path: nextBase + relative };
+    }
+    return dept;
+  });
+
 export const api = {
   async bootstrap() {
     if (ensureDesktop()) {
       return desktopApi!.bootstrap();
     }
-    return { basePath: mockDepartments[0]?.path ?? '' };
+    return { basePath: fallbackBasePath };
+  },
+
+  async updateBasePath(basePath: string) {
+    if (ensureDesktop()) {
+      const result = await desktopApi!.updateBasePath({ basePath });
+      return result.basePath;
+    }
+    const previous = fallbackBasePath;
+    fallbackBasePath = basePath;
+    fallbackDepartments = remapDepartmentsBase(fallbackDepartments, previous, basePath);
+    return fallbackBasePath;
   },
 
   async login(cpf: string, password: string): Promise<User> {

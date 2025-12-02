@@ -15,4 +15,5 @@ contextBridge.exposeInMainWorld('desktopAPI', {
   previewFile: (payload) => ipcRenderer.invoke('files:preview', payload),
   openFile: (payload) => ipcRenderer.invoke('files:open', payload),
   downloadFile: (payload) => ipcRenderer.invoke('files:download', payload),
+  updateBasePath: (payload) => ipcRenderer.invoke('basePath:update', payload),
 });

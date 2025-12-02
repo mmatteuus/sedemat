@@ -18,7 +18,7 @@ const buildDefaultDepartments = (basePath) => [
   { id: 'scan', name: 'SCAN', path: `${basePath}\\SCAN`, defaultAccess: true, active: true },
 ];
 
-const defaultUsers = [
+const buildDefaultUsers = (defaultDepartments) => [
   {
     id: '1',
     name: 'Gestor TI',
@@ -47,6 +47,7 @@ const ensureDataFile = (app) => {
   if (!fs.existsSync(filePath)) {
     const basePath = resolveBasePath();
     const defaultDepartments = buildDefaultDepartments(basePath);
+    const defaultUsers = buildDefaultUsers(defaultDepartments);
     const usersWithPasswords = defaultUsers.map((u) => ({
       ...u,
       passwordHash: hashPassword(buildInitialPassword(u.name, u.cpf)),
@@ -71,32 +72,26 @@ const ensureDataFile = (app) => {
 const readData = (app) => {
   const filePath = ensureDataFile(app);
   const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  let changed = false;
 
-  const envBase = resolveBasePath();
-  const previousBase = data.basePath || envBase;
+  if (!data.basePath) {
+    data.basePath = resolveBasePath();
+    changed = true;
+  }
+
+  const basePath = data.basePath || resolveBasePath();
 
   // Guarantee default departments exist
-  const defaultDepartments = buildDefaultDepartments(envBase);
+  const defaultDepartments = buildDefaultDepartments(basePath);
   const existingIds = new Set((data.departments || []).map((d) => d.id));
   defaultDepartments.forEach((dept) => {
     if (!existingIds.has(dept.id)) {
       data.departments.push(dept);
+      changed = true;
     }
   });
 
-  // If environment base path changed, update stored base path and department paths when they still use the old base path
-  if (envBase !== previousBase) {
-    data.departments = data.departments.map((dept) => {
-      if (dept.path.startsWith(previousBase)) {
-        const relative = dept.path.slice(previousBase.length);
-        return { ...dept, path: envBase + relative };
-      }
-      return dept;
-    });
-    data.basePath = envBase;
-    saveData(app, data);
-  } else if (!data.basePath) {
-    data.basePath = envBase;
+  if (changed) {
     saveData(app, data);
   }
 
@@ -177,6 +172,32 @@ const toggleUserStatus = (app, id, active) => {
 const getBasePath = (app) => {
   const data = readData(app);
   return data.basePath || resolveBasePath();
+};
+
+const updateBasePath = (app, newBasePath) => {
+  const data = readData(app);
+  const previousBase = data.basePath || resolveBasePath();
+  const targetBase = newBasePath || resolveBasePath();
+
+  data.basePath = targetBase;
+  data.departments = data.departments.map((dept) => {
+    if (dept.path.startsWith(previousBase)) {
+      const relative = dept.path.slice(previousBase.length);
+      return { ...dept, path: targetBase + relative };
+    }
+    return dept;
+  });
+
+  const defaultDepartments = buildDefaultDepartments(targetBase);
+  const existingIds = new Set(data.departments.map((d) => d.id));
+  defaultDepartments.forEach((dept) => {
+    if (!existingIds.has(dept.id)) {
+      data.departments.push(dept);
+    }
+  });
+
+  saveData(app, data);
+  return { basePath: data.basePath };
 };
 
 const listDepartments = (app) => {
@@ -295,4 +316,5 @@ module.exports = {
   saveUserPermissions,
   listFiles,
   buildPreview,
+  updateBasePath,
 };

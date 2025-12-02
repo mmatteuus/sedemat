@@ -17,6 +17,7 @@ declare global {
       previewFile: (payload: { fullPath: string; type: FileItem['type'] }) => Promise<FilePreviewData>;
       openFile: (payload: { fullPath: string }) => Promise<void>;
       downloadFile: (payload: { fullPath: string }) => Promise<string | null>;
+      updateBasePath: (payload: { basePath: string }) => Promise<{ basePath: string }>;
     };
   }
 }
