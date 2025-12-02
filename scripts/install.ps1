@@ -1,12 +1,13 @@
 param(
-  [string]$BasePath = "\\serv-arquivos\ARQUIVOS\MEIO AMBIENTE",
-  [switch]$SkipBuild
+  [string]$BasePath = "",
+  [switch]$SkipBuild,
+  [switch]$SetBasePath = $false
 )
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "Instalando Pastas SEDEMAT..." -ForegroundColor Cyan
-Write-Host "BasePath: $BasePath"
+if ($BasePath) { Write-Host "BasePath: $BasePath" }
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $repoRoot
@@ -20,9 +21,13 @@ if (-not $SkipBuild) {
   npm run desktop:build
 }
 
-# Define variavel de ambiente para o caminho base (nivel maquina)
-[Environment]::SetEnvironmentVariable("SEDEMAT_BASE_PATH", $BasePath, "Machine")
-Write-Host "Variavel de ambiente SEDEMAT_BASE_PATH configurada." -ForegroundColor Green
+# Define variavel de ambiente para o caminho base (nivel maquina) opcional
+if ($SetBasePath -and $BasePath) {
+  [Environment]::SetEnvironmentVariable("SEDEMAT_BASE_PATH", $BasePath, "Machine")
+  Write-Host "Variavel de ambiente SEDEMAT_BASE_PATH configurada." -ForegroundColor Green
+} else {
+  Write-Host "SEDEMAT_BASE_PATH nao foi definida. Configure no app (Admin > Caminho base) apos instalar." -ForegroundColor Yellow
+}
 
 # Localiza o instalador mais recente
 $installer = Get-ChildItem -Path "$repoRoot\release" -Filter "Pastas-SEDEMAT-*-Setup.exe" -Recurse |

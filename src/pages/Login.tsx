@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,24 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Folder } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 const Login = () => {
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [basePath, setBasePath] = useState('');
+  const [savingBasePath, setSavingBasePath] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    api
+      .bootstrap()
+      .then((data) => setBasePath(data.basePath || ''))
+      .catch(() => setBasePath(''));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +49,35 @@ const Login = () => {
     setLoading(false);
   };
 
+  const handleSaveBasePath = async () => {
+    const normalized = basePath.trim();
+    if (!normalized) {
+      toast({
+        title: 'Informe o caminho da pasta',
+        description: 'Ex: \\\\servidor\\compartilhamento\\PASTA',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setSavingBasePath(true);
+    try {
+      const updated = await api.updateBasePath(normalized);
+      setBasePath(updated);
+      toast({
+        title: 'Caminho base salvo',
+        description: updated,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar caminho',
+        description: 'Verifique o compartilhamento e tente novamente',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingBasePath(false);
+    }
+  };
+
   const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     return numbers.substring(0, 11);
@@ -57,6 +96,22 @@ const Login = () => {
           <CardDescription>Sistema de gestao de arquivos por setor</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="space-y-3 mb-6">
+            <Label>Caminho base da rede</Label>
+            <div className="flex gap-2">
+              <Input
+                value={basePath}
+                onChange={(e) => setBasePath(e.target.value)}
+                placeholder="\\\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE"
+              />
+              <Button type="button" onClick={handleSaveBasePath} disabled={savingBasePath}>
+                {savingBasePath ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Informe o caminho da pasta compartilhada antes de acessar.
+            </p>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
@@ -82,13 +137,16 @@ const Login = () => {
                 className="border-primary/30 focus:border-primary"
               />
             </div>
-            <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-semibold"
+              disabled={loading || !basePath.trim()}
+            >
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
           <div className="mt-6 text-sm text-muted-foreground text-center">
-            <p>Gestor padrao: <strong>12345678901</strong> / <strong>g123456</strong></p>
-            <p>Servidor exemplo: <strong>98765432100</strong> / <strong>j987654</strong></p>
+            <p>Gestor: <strong>pma\05956815140</strong> / <strong>m059568</strong></p>
           </div>
         </CardContent>
       </Card>

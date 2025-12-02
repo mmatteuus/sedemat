@@ -2,24 +2,27 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DEFAULT_BASE_PATH = '\\\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE';
+const DEFAULT_BASE_PATH = '';
 
 const resolveBasePath = () => process.env.SEDEMAT_BASE_PATH || DEFAULT_BASE_PATH;
 
 const buildInitialPassword = (name, cpf) => `${name.trim().charAt(0).toLowerCase()}${cpf.substring(0, 6)}`;
 const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex');
 
-const buildDefaultDepartments = (basePath) => [
-  { id: 'administrativo', name: 'ADMINISTRATIVO', path: `${basePath}\\ADMINISTRATIVO`, defaultAccess: false, active: true },
-  { id: 'desenvolvimento', name: 'DESENVOLVIMENTO ECONOMICO', path: `${basePath}\\DESENVOLVIMENTO ECONOMICO`, defaultAccess: false, active: true },
-  { id: 'fiscalizacao', name: 'FISCALIZACAO', path: `${basePath}\\FISCALIZACAO`, defaultAccess: false, active: true },
-  { id: 'geral-meio-ambiente', name: 'GERAL MEIO AMBIENTE', path: `${basePath}\\GERAL MEIO AMBIENTE`, defaultAccess: false, active: true },
-  { id: 'juridico', name: 'JURIDICO', path: `${basePath}\\JURIDICO`, defaultAccess: false, active: true },
-  { id: 'licenciamento', name: 'LICENCIAMENTO', path: `${basePath}\\LICENCIAMENTO`, defaultAccess: false, active: true },
-  { id: 'turismo', name: 'TURISMO', path: `${basePath}\\TURISMO`, defaultAccess: false, active: true },
-  { id: 'geral-sedemat', name: 'GERAL SEDEMAT', path: `${basePath}\\GERAL SEDEMAT`, defaultAccess: true, active: true },
-  { id: 'scan', name: 'SCAN', path: `${basePath}\\SCAN`, defaultAccess: true, active: true },
-];
+const buildDefaultDepartments = (basePath) => {
+  if (!basePath) return [];
+  return [
+    { id: 'administrativo', name: 'ADMINISTRATIVO', path: `${basePath}\\ADMINISTRATIVO`, defaultAccess: false, active: true },
+    { id: 'desenvolvimento', name: 'DESENVOLVIMENTO ECONOMICO', path: `${basePath}\\DESENVOLVIMENTO ECONOMICO`, defaultAccess: false, active: true },
+    { id: 'fiscalizacao', name: 'FISCALIZACAO', path: `${basePath}\\FISCALIZACAO`, defaultAccess: false, active: true },
+    { id: 'geral-meio-ambiente', name: 'GERAL MEIO AMBIENTE', path: `${basePath}\\GERAL MEIO AMBIENTE`, defaultAccess: false, active: true },
+    { id: 'juridico', name: 'JURIDICO', path: `${basePath}\\JURIDICO`, defaultAccess: false, active: true },
+    { id: 'licenciamento', name: 'LICENCIAMENTO', path: `${basePath}\\LICENCIAMENTO`, defaultAccess: false, active: true },
+    { id: 'turismo', name: 'TURISMO', path: `${basePath}\\TURISMO`, defaultAccess: false, active: true },
+    { id: 'geral-sedemat', name: 'GERAL SEDEMAT', path: `${basePath}\\GERAL SEDEMAT`, defaultAccess: true, active: true },
+    { id: 'scan', name: 'SCAN', path: `${basePath}\\SCAN`, defaultAccess: true, active: true },
+  ];
+};
 
 const buildDefaultUsers = (defaultDepartments) => [
   {
@@ -212,23 +215,33 @@ const getBasePath = (app) => {
 const updateBasePath = (app, newBasePath) => {
   const data = readData(app);
   const previousBase = data.basePath || resolveBasePath();
-  const targetBase = newBasePath || resolveBasePath();
+  const targetBase = newBasePath;
+
+  if (!targetBase) {
+    throw new Error('Caminho base nao informado');
+  }
 
   data.basePath = targetBase;
-  data.departments = data.departments.map((dept) => {
-    if (previousBase && dept.path.startsWith(previousBase)) {
-      const relative = dept.path.slice(previousBase.length);
-      return { ...dept, path: targetBase + relative };
-    }
-    return dept;
-  });
+  if (previousBase) {
+    data.departments = data.departments.map((dept) => {
+      if (dept.path && dept.path.startsWith(previousBase)) {
+        const relative = dept.path.slice(previousBase.length);
+        return { ...dept, path: targetBase + relative };
+      }
+      return dept;
+    });
+  } else {
+    data.departments = buildDefaultDepartments(targetBase);
+  }
 
-  const defaultDepartments = buildDefaultDepartments(targetBase);
-  const existingIds = new Set(data.departments.map((d) => d.id));
-  defaultDepartments.forEach((dept) => {
-    if (!existingIds.has(dept.id)) {
-      data.departments.push(dept);
+  // reatribui gestor a todos os departamentos
+  data.users = data.users.map((u) => {
+    if (u.role === 'GESTOR_TI') {
+      const defaults = data.departments.filter((d) => d.defaultAccess).map((d) => d.id);
+      const allIds = data.departments.map((d) => d.id);
+      return { ...u, departments: Array.from(new Set([...allIds, ...defaults])) };
     }
+    return u;
   });
 
   saveData(app, data);
@@ -293,6 +306,9 @@ const detectFileType = (entryName) => {
 };
 
 const listFiles = (department, relativePath = '') => {
+  if (!department.path) {
+    throw new Error('Caminho do departamento nao configurado');
+  }
   const targetPath = relativePath ? path.join(department.path, relativePath) : department.path;
   const entries = fs.readdirSync(targetPath, { withFileTypes: true });
 

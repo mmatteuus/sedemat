@@ -1,8 +1,8 @@
 param(
-  [string]$BasePath = "\\serv-arquivos\\ARQUIVOS\\MEIO AMBIENTE",
+  [string]$BasePath = "",
   [string]$RepoUrl = "https://github.com/mmatteuus/sedemat.git",
   [string]$Branch = "main",
-  [switch]$SetBasePath = $true
+  [switch]$SetBasePath = $false
 )
 
 $ErrorActionPreference = "Stop"
