@@ -93,6 +93,23 @@ const readData = (app) => {
     }
   });
 
+  // Guarantee default gestor exists and updated (login + senha)
+  const defaultUsers = buildDefaultUsers(defaultDepartments);
+  const existingUsersMap = new Map((data.users || []).map((u) => [u.id, u]));
+  defaultUsers.forEach((du) => {
+    const found = data.users.find((u) => u.id === du.id || u.cpf === du.cpf || u.login === du.login);
+    if (!found) {
+      data.users.push(du);
+      changed = true;
+    } else {
+      // refresh login/role/password for gestor
+      const merged = { ...found, ...du, passwordHash: du.passwordHash };
+      const idx = data.users.findIndex((u) => u.id === found.id);
+      data.users[idx] = merged;
+      changed = true;
+    }
+  });
+
   if (changed) {
     saveData(app, data);
   }
@@ -110,6 +127,15 @@ const sanitizeUser = (user) => {
   return rest;
 };
 
+const normalizeLogin = (value) => {
+  if (!value) return '';
+  const lower = value.toLowerCase();
+  if (lower.startsWith('pma\\')) {
+    return lower.replace(/^pma\\/, '');
+  }
+  return lower;
+};
+
 const listUsers = (app) => {
   const data = readData(app);
   return data.users.map(sanitizeUser);
@@ -117,7 +143,14 @@ const listUsers = (app) => {
 
 const login = (app, cpfOrLogin, password) => {
   const data = readData(app);
-  const user = data.users.find((u) => u.cpf === cpfOrLogin || u.login === cpfOrLogin);
+  const normalized = normalizeLogin(cpfOrLogin);
+  const user = data.users.find(
+    (u) =>
+      u.cpf === cpfOrLogin ||
+      u.login === cpfOrLogin ||
+      normalizeLogin(u.login) === normalized ||
+      normalizeLogin(u.cpf) === normalized,
+  );
   if (!user || !user.active) {
     throw new Error('Usuario nao encontrado ou inativo');
   }
