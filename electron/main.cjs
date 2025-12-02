@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, nativeImage } = require('electron');
 const {
   getBasePath,
   ensureDataFile,
@@ -19,11 +19,18 @@ const {
 } = require('./data-store.cjs');
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL;
+const treeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="48" fill="#0f172a"/>
+  <text x="50%" y="54%" font-size="170" text-anchor="middle" dominant-baseline="middle">&#127795;</text>
+</svg>`;
+const treeIconDataUrl = `data:image/svg+xml;base64,${Buffer.from(treeSvg).toString('base64')}`;
+const treeIcon = nativeImage.createFromDataURL(treeIconDataUrl);
 
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 1300,
     height: 900,
+    icon: treeIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,

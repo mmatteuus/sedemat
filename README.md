@@ -49,3 +49,14 @@ Aplicacao desktop (Electron + React + Vite) para acesso organizado aos arquivos 
 - O app armazena configuracoes e usuarios em `AppData/Roaming/<Pastas SEDEMAT>/sedemat-data.json`.
 - Departamentos com `defaultAccess` (GERAL SEDEMAT e SCAN) sao liberados automaticamente para todos.
 - Caso o compartilhamento de rede nao esteja acessivel, o modo de desenvolvimento usa dados mockados.
+
+## Instalacao automatica (baixa do repo + instala)
+- Um unico comando para baixar o repositorio, gerar o instalador e instalar:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/mmatteuus/sedemat/main/scripts/auto-install.ps1 | iex"
+  ```
+  - Para definir outro caminho base no mesmo fluxo:
+    ```powershell
+    powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/mmatteuus/sedemat/main/scripts/auto-install.ps1 -OutFile auto-install.ps1; ./auto-install.ps1 -BasePath \"\\\\servidor\\compartilhamento\\PASTA\""
+    ```
+  - Requisitos: Git, Node.js/npm e permissao para definir variaveis de ambiente em nivel de maquina.
