@@ -57,6 +57,6 @@ Aplicacao desktop (Electron + React + Vite) para acesso organizado aos arquivos 
   ```
   - Para definir outro caminho base no mesmo fluxo:
     ```powershell
-    powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/mmatteuus/sedemat/main/scripts/auto-install.ps1 -OutFile auto-install.ps1; ./auto-install.ps1 -BasePath \"\\\\servidor\\compartilhamento\\PASTA\""
+    powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/mmatteuus/sedemat/main/scripts/auto-install.ps1 -OutFile auto-install.ps1; ./auto-install.ps1 -BasePath \"\\\\servidor\\compartilhamento\\PASTA\" -SetBasePath"
     ```
-  - Requisitos: Git, Node.js/npm e permissao para definir variaveis de ambiente em nivel de maquina.
+  - Requisitos: Git, Node.js/npm e permissao para definir variaveis de ambiente em nivel de maquina (o caminho pode ser configurado depois pelo app, sem usar variavel).

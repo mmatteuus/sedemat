@@ -1,7 +1,8 @@
 param(
-  [string]$BasePath = "\\serv-arquivos\ARQUIVOS\MEIO AMBIENTE",
+  [string]$BasePath = "",
   [string]$RepoUrl = "https://github.com/mmatteuus/sedemat.git",
-  [string]$Branch = "main"
+  [string]$Branch = "main",
+  [switch]$SetBasePath
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,8 +24,12 @@ npm install
 Write-Host "Gerando instalador desktop (npm run desktop:build)..." -ForegroundColor Yellow
 npm run desktop:build
 
-[Environment]::SetEnvironmentVariable("SEDEMAT_BASE_PATH", $BasePath, "Machine")
-Write-Host "Variavel SEDEMAT_BASE_PATH configurada: $BasePath" -ForegroundColor Green
+if ($SetBasePath -and $BasePath) {
+  [Environment]::SetEnvironmentVariable("SEDEMAT_BASE_PATH", $BasePath, "Machine")
+  Write-Host "Variavel SEDEMAT_BASE_PATH configurada: $BasePath" -ForegroundColor Green
+} else {
+  Write-Host "SEDEMAT_BASE_PATH NAO foi definida. Configure pelo app (Administrador > Caminho base) apos instalar." -ForegroundColor Yellow
+}
 
 $installer = Get-ChildItem -Path (Join-Path $workDir "release") -Filter "Pastas-SEDEMAT-*-Setup.exe" -Recurse |
   Sort-Object LastWriteTime -Descending |
