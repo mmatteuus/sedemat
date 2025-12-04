@@ -1,7 +1,0 @@
-<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pastas SEDEMAT placeholder">
-  <rect width="200" height="120" fill="#e8f5e9" rx="12" />
-  <rect x="24" y="40" width="152" height="52" rx="8" fill="#2e7d32" opacity="0.12" />
-  <path d="M48 60h32l8-10h64v40H48z" fill="#2e7d32" opacity="0.32" />
-  <path d="M46 56c0-2.2 1.8-4 4-4h30l8-10h60c2.2 0 4 1.8 4 4v42c0 2.2-1.8 4-4 4H50c-2.2 0-4-1.8-4-4V56z" fill="#2e7d32" />
-  <text x="58" y="90" font-size="14" font-family="Arial, sans-serif" fill="#ffffff">Pastas SEDEMAT</text>
-</svg>
